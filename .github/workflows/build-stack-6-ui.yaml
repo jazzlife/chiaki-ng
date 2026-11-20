@@ -204,3 +204,32 @@ jobs:
           path: chiaki-ng-macos_arm64-Release.dmg
           if-no-files-found: error
           retention-days: 7
+
+  publish-release:
+    name: Publish stack/6-ui prerelease
+    needs: [build-windows_x64-msys2, build-mac_arm64_github]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: stack-6-ui-latest
+    steps:
+      - name: Get the build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Replace the rolling prerelease
+        run: |
+          set -euo pipefail
+          ls -l dist
+          # Rolling release: drop the previous one and its tag, then re-create it at this commit.
+          gh release delete "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          gh release create "$RELEASE_TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "chiaki-ng stack/6-ui (${GITHUB_SHA::7})" \
+            --notes "Test build of \`stack/6-ui\` at ${GITHUB_SHA}. Unsigned; built by ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
