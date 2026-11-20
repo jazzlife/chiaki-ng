@@ -1,6 +1,6 @@
 name: Build chiaki-ng stack/6-ui
 
-# Builds the stacked mouse-look branch on every push, same jobs as build-pr.yaml.
+# Builds the stacked mouse-look branch on every push: the Windows and macOS jobs from build-pr.yaml.
 on:
   push:
     branches: [ 'stack/6-ui' ]
@@ -202,88 +202,5 @@ jobs:
         with:
           name: chiaki-ng-macos_arm64-Release.dmg
           path: chiaki-ng-macos_arm64-Release.dmg
-          if-no-files-found: error
-          retention-days: 7
-
-  build-appimage_x64:
-    name: Build chiaki-ng appimage_x64
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Setup Podman
-        run: |
-          sudo apt update
-          sudo apt-get -y install podman
-
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          submodules: 'recursive'
-          path: 'chiaki-ng'
-
-      - name: Add QmlWebEngine Import
-        working-directory: chiaki-ng
-        run: |
-          cp scripts/qtwebengine_import.qml gui/src/qml/
-
-      - name: Run build script
-        working-directory: chiaki-ng
-        run: |
-          set -xe
-          podman run --rm \
-            -v "`pwd`:/build/chiaki" \
-            -w "/build/chiaki" \
-            --device /dev/fuse \
-            --cap-add SYS_ADMIN \
-            -t docker.io/streetpea/chiaki-ng-builder:qt6.9.3 \
-            /bin/bash -c "sudo -E scripts/build-appimage.sh /build/appdir"
-          cp appimage/chiaki-ng.AppImage appimage/chiaki-ng.AppImage_x86_64
-
-      - name: Upload chiaki-ng Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: chiaki-ng.AppImage_x86_64
-          path: chiaki-ng/appimage/chiaki-ng.AppImage_x86_64
-          if-no-files-found: error
-          retention-days: 7
-
-  build-appimage_arm64:
-    name: Build chiaki-ng appimage_arm64
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Setup Podman
-        run: |
-          sudo apt update
-          sudo apt-get -y install podman
-
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          submodules: 'recursive'
-          path: 'chiaki-ng'
-
-      - name: Add QmlWebEngine Import
-        working-directory: chiaki-ng
-        run: |
-          cp scripts/qtwebengine_import.qml gui/src/qml/
-
-      - name: Run build script
-        working-directory: chiaki-ng
-        run: |
-          set -xe
-          podman run --rm \
-            -v "`pwd`:/build/chiaki" \
-            -w "/build/chiaki" \
-            --device /dev/fuse \
-            --cap-add SYS_ADMIN \
-            -t docker.io/streetpea/chiaki-ng-builder:qt6.9.3 \
-            /bin/bash -c "sudo -E scripts/build-appimage.sh /build/appdir"
-          cp appimage/chiaki-ng.AppImage appimage/chiaki-ng.AppImage_arm64
-
-      - name: Upload chiaki-ng Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: chiaki-ng.AppImage_arm64
-          path: chiaki-ng/appimage/chiaki-ng.AppImage_arm64
           if-no-files-found: error
           retention-days: 7
